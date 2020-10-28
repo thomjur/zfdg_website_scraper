@@ -1,0 +1,6 @@
+CorpusData/
+backup/
+__pycache__/
+env/
+env-win/
+.vscode/
