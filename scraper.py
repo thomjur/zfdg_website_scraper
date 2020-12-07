@@ -4,24 +4,24 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-import shutil, os, time
+import shutil, os, time, datetime, re
 
 
 class Corpus:
     '''
         MAIN CLASS
-        this class offers the opportunity to load, save and analyze the website corpus
+        this class loads, saves, and analyzes the website corpus
     '''
 
     def __init__(self):
-        self.websites_list = self.getWebsiteList()
+        self.websites_list = self.getWebsiteList_()
 
 
     # private functions
 
-    def getWebsiteList(self):
+    def getWebsiteList_(self):
         '''
-            return websites (URLs) from websites.txt file in the same folder as list of tuples (URL, DOMAIN)
+            return websites (URLs) and DOMAINS from websites.txt file as list of tuples (URL, DOMAIN)
         '''
         with open("websites.txt", "r") as f:
             websites_list = f.readlines()
@@ -38,28 +38,42 @@ class Corpus:
         '''
 
         sure = False
-        input_ = input("Are you sure you want to (re-)init the corpus data? (older data in folder CorpusData will be lost. Make backup first) (Y/n)")
-        if input_ == "Y":
+        input_ = input("Are you sure you want to (re-)init the corpus data? (older data in folder CorpusData will be lost. Make backup first) (Y/N)")
+        if input_.lower() == "y":
             sure = True
             print("Starting process of downloading coprus data. This might take a while.")
-        elif input_ == "n":
+        elif input_.lower() == "n":
             print("Abort.")
             return 
         else:
             print("Unknown entry. Abort.")
             return
 
+        loop = True
+        while(loop):
+            how_many = input("How many websites do you want to scrape?")
+            try:
+                cast_ = int(how_many)
+                loop = False
+            except:
+                print("Please pass a valid integer number!")
+
         if sure:
             # first delete existing folder and create new empty one
             shutil.copytree("CorpusData", "backup", dirs_exist_ok=True)
             shutil.rmtree("CorpusData")
             os.makedirs("CorpusData")
+            iterator_ = 0
             for website, domain in self.websites_list:
-                new_obj = Scraper(website)
-                new_obj.saveWebsite()
-                time.sleep(0.5)
-
-
+                if iterator_ < int(how_many):
+                    new_obj = Scraper(website)
+                    new_obj.saveWebsite()
+                    time.sleep(0.5)
+                    iterator_ += 1
+                else:
+                    break
+            with open("CorpusData/INFO.txt", "w", encoding="utf-8") as f:
+                f.write("This corpus was built on the {} and includes {} websites.".format(datetime.datetime.today(), how_many))  
 
 
 class Scraper:
@@ -72,12 +86,11 @@ class Scraper:
     def __init__(self, website):
         self.browser = self.initBrowser_()
         self.website_orig = website
-        self.website_soup = self.getSoup_()
-        #self.getLinks_(self.website_soup)
+        self.website_html = self.getHTML_()
 
     # private functions
     
-    def getSoup_(self):
+    def getHTML_(self):
         '''
             getting HTML with beautifulsoup and selenium
         '''
@@ -90,18 +103,10 @@ class Scraper:
         except:
             print("Couldn't find consent submission on this page!")
 
-        soup = BeautifulSoup(self.browser.page_source)
+        WebDriverWait(self.browser, 3)
+        page = self.browser.page_source
         self.browser.close()
-        return soup
-
-
-    def getLinks_(self, soup):
-        '''
-            function to get all EXTERNAL and INTERNAL LINKS from a website
-        '''
-        links = soup.find_all()
-        print("Links: " + str(len(links)))
-
+        return page
 
     def initBrowser_(self):
         '''
@@ -110,7 +115,6 @@ class Scraper:
         return webdriver.Edge(
             "D:\edgedriver_win64\msedgedriver.exe")
 
-
     # public methods (alphabetical order)
 
     def printWebsite(self):
@@ -118,5 +122,33 @@ class Scraper:
 
     def saveWebsite(self):
         name = urlparse(self.website_orig).netloc
-        with open("CorpusData/" + name + ".txt", "w", encoding="utf-8") as f:
-            f.write(str(self.website_soup))    
+        with open("CorpusData/" + name + ".html", "w", encoding="utf-8") as f:
+            f.write(str(self.website_html))
+
+
+class Analyzer:
+    '''
+        analyzes the websites stored in .\CorpusData
+        ** internal and external links
+        ** number of images
+        ** image size
+        ** text analysis (?)
+    '''
+
+    def __init__(self):
+        directory = os.path.abspath("CorpusData/")
+        
+        
+    # public methods
+    def getLinks(self):
+        directory = "CorpusData"
+        for entry in os.scandir(directory):
+            if entry.path.endswith(".html"):
+                with open(entry.path, "r", encoding="utf-8") as f:
+                    soup = BeautifulSoup(f.read(), "html.parser")
+                    links = soup.find_all("link")
+                    a_elems = soup.find_all("a")
+                    for a in a_elems:
+                        print(a.get("href"))
+                    
+                

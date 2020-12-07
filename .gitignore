@@ -4,3 +4,5 @@ __pycache__/
 env/
 env-win/
 .vscode/
+corpus_info.ipynb
+.ipynb_checkpoints

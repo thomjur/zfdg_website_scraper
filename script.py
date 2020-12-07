@@ -1,4 +1,4 @@
-from scraper import Scraper, Corpus
+from scraper import Scraper, Corpus, Analyzer
 
 '''
 IMPORTANT NOTE: Make sure that you have an Edge browser + webdriver installed, otherwise the program does not work
@@ -8,11 +8,14 @@ written by:
     Thomas Jurczyk, 2020
 '''
 
-
 def initialize():
-    new_corpus = Corpus()
-    new_corpus.initCorpus()
-
+    user_input = input("what u wanna do?")
+    if user_input == "1":
+        new_corpus = Corpus()
+        new_corpus.initCorpus()
+    elif user_input == "2":
+        ana = Analyzer()
+        ana.getLinks()
 
 if __name__ == "__main__":
     initialize() 
