@@ -4,7 +4,11 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-import shutil, os, time, datetime, re
+import shutil
+import os
+import time
+import datetime
+import re
 
 
 class Corpus:
@@ -15,7 +19,6 @@ class Corpus:
 
     def __init__(self):
         self.websites_list = self.getWebsiteList_()
-
 
     # private functions
 
@@ -38,13 +41,14 @@ class Corpus:
         '''
 
         sure = False
-        input_ = input("Are you sure you want to (re-)init the corpus data? (older data in folder CorpusData will be lost. Make backup first) (Y/N)")
+        input_ = input(
+            "Are you sure you want to (re-)init the corpus data? (older data in folder CorpusData will be lost. Make backup first) (Y/N)")
         if input_.lower() == "y":
             sure = True
             print("Starting process of downloading coprus data. This might take a while.")
         elif input_.lower() == "n":
             print("Abort.")
-            return 
+            return
         else:
             print("Unknown entry. Abort.")
             return
@@ -73,7 +77,8 @@ class Corpus:
                 else:
                     break
             with open("CorpusData/INFO.txt", "w", encoding="utf-8") as f:
-                f.write("This corpus was built on the {} and includes {} websites.".format(datetime.datetime.today(), how_many))  
+                f.write("This corpus was built on the {} and includes {} websites.".format(
+                    datetime.datetime.today(), how_many))
 
 
 class Scraper:
@@ -89,7 +94,7 @@ class Scraper:
         self.website_html = self.getHTML_()
 
     # private functions
-    
+
     def getHTML_(self):
         '''
             getting HTML with beautifulsoup and selenium
@@ -98,7 +103,8 @@ class Scraper:
         # trying to accept data policy consents
         try:
             WebDriverWait(self.browser, 2)
-            self.browser.find_element_by_xpath("//input[@type='submit' and (@value='OK' or @value='Ich stimme zu')]").click()
+            self.browser.find_element_by_xpath(
+                "//input[@type='submit' and (@value='OK' or @value='Ich stimme zu')]").click()
             WebDriverWait(self.browser, 2)
         except:
             print("Couldn't find consent submission on this page!")
@@ -137,7 +143,7 @@ class Analyzer:
 
     def __init__(self):
         directory = os.path.abspath("CorpusData/")
-        
+
     # private methods
 
     def absoluteURL(self, url):
@@ -147,16 +153,52 @@ class Analyzer:
         return bool(urlparse(url).netloc)
 
     # public methods
+
+    def getImages(self):
+        '''
+        creating dict of dicts with information about images on website
+        '''
+        directory = "CorpusData"
+        img_dict_global = dict()
+        for entry in os.scandir(directory):
+            if entry.path.endswith(".html"):
+                # getting url of current site + cleaning
+                _, netloc_ = os.path.split(entry.path)
+                netloc_ = netloc_.replace(
+                    ".html", "").replace("www.", "").strip()
+                curr_site_img_dict = {
+                    "total_images": 0, "images": dict()}
+                with open(entry.path, "r", encoding="utf-8") as f:
+                    soup = BeautifulSoup(f.read(), "html.parser")
+                    img_elems = soup.find_all("img")
+                    # add number of background images; they are automatically regarded as huge images
+                    img_background = soup.find_all(style=re.compile(r"background-image:"))
+                    curr_site_img_dict["background_images"] = len(img_background)
+                    curr_site_img_dict["total_images"] = len(img_elems)
+                    for img in img_elems:
+                        curr_site_img_dict["images"][img.get("src")] = {
+                            "width": img.get("width"),
+                            "height": img.get("height")
+                        }
+                    img_dict_global[netloc_] = curr_site_img_dict
+
+        return img_dict_global
+
     def getLinks(self):
+        '''
+        creating a dict of dicts with information about internal and external links on website
+        '''
         directory = "CorpusData"
         link_dict_global = dict()
         for entry in os.scandir(directory):
             if entry.path.endswith(".html"):
                 # getting url of current site + cleaning
                 _, netloc_ = os.path.split(entry.path)
-                netloc_ = netloc_.replace(".html", "").replace("www.", "").strip()
-                curr_site_link_dict = {"external_links": 0, "internal_links": 0}
-                print(f"Current netloc {netloc_} of type {type(netloc_)}")
+                netloc_ = netloc_.replace(
+                    ".html", "").replace("www.", "").strip()
+                curr_site_link_dict = {
+                    "external_links": 0, "internal_links": 0}
+                #print(f"Current netloc {netloc_} of type {type(netloc_)}")
                 with open(entry.path, "r", encoding="utf-8") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
                     #links_elem = soup.find_all("link")
@@ -164,16 +206,8 @@ class Analyzer:
                     for a in a_elems:
                         if self.absoluteURL(a.get("href")) and (netloc_ not in a.get("href")):
                             curr_site_link_dict["external_links"] += 1
-                            if netloc_ == "houseofsolution.de":
-                                print(f"External link {a}")
-                                print(netloc_ not in a)
-                                pass
                         else:
                             curr_site_link_dict["internal_links"] += 1
-                            if netloc_ == "houseofsolution.de":
-                                #print(f"Internal link {a}")
-                                pass
+                    curr_site_link_dict["total_links"] = len(a_elems)
                     link_dict_global[netloc_] = curr_site_link_dict
         return link_dict_global
-                    
-                
