@@ -138,17 +138,42 @@ class Analyzer:
     def __init__(self):
         directory = os.path.abspath("CorpusData/")
         
-        
+    # private methods
+
+    def absoluteURL(self, url):
+        '''
+        checks if a URL is relative or absolute
+        '''
+        return bool(urlparse(url).netloc)
+
     # public methods
     def getLinks(self):
         directory = "CorpusData"
+        link_dict_global = dict()
         for entry in os.scandir(directory):
             if entry.path.endswith(".html"):
+                # getting url of current site + cleaning
+                _, netloc_ = os.path.split(entry.path)
+                netloc_ = netloc_.replace(".html", "").replace("www.", "").strip()
+                curr_site_link_dict = {"external_links": 0, "internal_links": 0}
+                print(f"Current netloc {netloc_} of type {type(netloc_)}")
                 with open(entry.path, "r", encoding="utf-8") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
-                    links = soup.find_all("link")
+                    #links_elem = soup.find_all("link")
                     a_elems = soup.find_all("a")
                     for a in a_elems:
-                        print(a.get("href"))
+                        if self.absoluteURL(a.get("href")) and (netloc_ not in a.get("href")):
+                            curr_site_link_dict["external_links"] += 1
+                            if netloc_ == "houseofsolution.de":
+                                print(f"External link {a}")
+                                print(netloc_ not in a)
+                                pass
+                        else:
+                            curr_site_link_dict["internal_links"] += 1
+                            if netloc_ == "houseofsolution.de":
+                                #print(f"Internal link {a}")
+                                pass
+                    link_dict_global[netloc_] = curr_site_link_dict
+        return link_dict_global
                     
                 

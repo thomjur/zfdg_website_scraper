@@ -15,7 +15,9 @@ def initialize():
         new_corpus.initCorpus()
     elif user_input == "2":
         ana = Analyzer()
-        ana.getLinks()
+        links_dict = ana.getLinks()
+        print(links_dict)
+        input("Press key to exit.")
 
 if __name__ == "__main__":
     initialize() 
