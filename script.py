@@ -15,8 +15,8 @@ def initialize():
         new_corpus.initCorpus()
     elif user_input == "2":
         ana = Analyzer()
-        imgs_dict = ana.getImages()
-        print(imgs_dict["credo-kirche.de"])
+        text_dict = ana.getText()
+        print(text_dict["credo-kirche.de"])
         input("Press key to exit.")
 
 if __name__ == "__main__":

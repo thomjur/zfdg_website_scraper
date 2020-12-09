@@ -18,7 +18,7 @@ class Corpus:
     '''
 
     def __init__(self):
-        self.websites_list = self.getWebsiteList_()
+        self.websiteList = self.getWebsiteList_()
 
     # private functions
 
@@ -27,8 +27,8 @@ class Corpus:
             return websites (URLs) and DOMAINS from websites.txt file as list of tuples (URL, DOMAIN)
         '''
         with open("websites.txt", "r") as f:
-            websites_list = f.readlines()
-        return [(website.split(",")[0], website.split(",")[1].strip().upper()) for website in websites_list if website != ""]
+            websiteList = f.readlines()
+        return [(website.split(",")[0], website.split(",")[1].strip().upper()) for website in websiteList if website != ""]
 
     # public methods
 
@@ -68,7 +68,7 @@ class Corpus:
             shutil.rmtree("CorpusData")
             os.makedirs("CorpusData")
             iterator_ = 0
-            for website, domain in self.websites_list:
+            for website, domain in self.websiteList:
                 if iterator_ < int(how_many):
                     new_obj = Scraper(website)
                     new_obj.saveWebsite()
@@ -90,8 +90,8 @@ class Scraper:
 
     def __init__(self, website):
         self.browser = self.initBrowser_()
-        self.website_orig = website
-        self.website_html = self.getHTML_()
+        self.websiteOriginal = website
+        self.websiteHTML = self.getHTML_()
 
     # private functions
 
@@ -99,7 +99,7 @@ class Scraper:
         '''
             getting HTML with beautifulsoup and selenium
         '''
-        self.browser.get(self.website_orig)
+        self.browser.get(self.websiteOriginal)
         # trying to accept data policy consents
         try:
             WebDriverWait(self.browser, 2)
@@ -124,12 +124,12 @@ class Scraper:
     # public methods (alphabetical order)
 
     def printWebsite(self):
-        print(self.website_orig)
+        print(self.websiteOriginal)
 
     def saveWebsite(self):
-        name = urlparse(self.website_orig).netloc
+        name = urlparse(self.websiteOriginal).netloc
         with open("CorpusData/" + name + ".html", "w", encoding="utf-8") as f:
-            f.write(str(self.website_html))
+            f.write(str(self.websiteHTML))
 
 
 class Analyzer:
@@ -142,11 +142,11 @@ class Analyzer:
     '''
 
     def __init__(self):
-        directory = os.path.abspath("CorpusData/")
+        self.directory = os.path.abspath("CorpusData/")
 
     # private methods
 
-    def absoluteURL(self, url):
+    def absoluteURL_(self, url):
         '''
         checks if a URL is relative or absolute
         '''
@@ -158,7 +158,7 @@ class Analyzer:
         '''
         creating dict of dicts with information about images on website
         '''
-        directory = "CorpusData"
+        directory = self.directory
         img_dict_global = dict()
         for entry in os.scandir(directory):
             if entry.path.endswith(".html"):
@@ -188,26 +188,49 @@ class Analyzer:
         '''
         creating a dict of dicts with information about internal and external links on website
         '''
-        directory = "CorpusData"
+        directory = self.directory
         link_dict_global = dict()
         for entry in os.scandir(directory):
             if entry.path.endswith(".html"):
                 # getting url of current site + cleaning
                 _, netloc_ = os.path.split(entry.path)
-                netloc_ = netloc_.replace(
-                    ".html", "").replace("www.", "").strip()
-                curr_site_link_dict = {
-                    "external_links": 0, "internal_links": 0}
-                #print(f"Current netloc {netloc_} of type {type(netloc_)}")
+                netloc_ = netloc_.replace(".html", "").replace("www.", "").strip()
+                curr_site_link_dict = {"external_links": 0, "internal_links": 0}
+                print(f"Current netloc {netloc_} of type {type(netloc_)}")
                 with open(entry.path, "r", encoding="utf-8") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
                     #links_elem = soup.find_all("link")
                     a_elems = soup.find_all("a")
                     for a in a_elems:
-                        if self.absoluteURL(a.get("href")) and (netloc_ not in a.get("href")):
+                        if self.absoluteURL_(a.get("href")) and (netloc_ not in a.get("href")):
                             curr_site_link_dict["external_links"] += 1
                         else:
                             curr_site_link_dict["internal_links"] += 1
                     curr_site_link_dict["total_links"] = len(a_elems)
                     link_dict_global[netloc_] = curr_site_link_dict
         return link_dict_global
+
+    def getText(self):
+        '''
+        get and count all text stored in <p> tags
+        TODO: maybe add text from other elements as well? (li)
+        '''
+        directory = self.directory
+        text_dict_global = dict()
+        for entry in os.scandir(directory):
+            print(entry)
+            if entry.path.endswith(".html"):
+                _, netloc_ = os.path.split(entry.path)
+                netloc_ = netloc_.replace(".html", "").replace("www.", "").strip()
+                curr_site_text_dict = {"total_length": 0, "text_complete": ""}
+                #print(f"Current netloc {netloc_} of type {type(netloc_)}")
+                with open(entry.path, "r", encoding="utf-8") as f:
+                    soup = BeautifulSoup(f.read(), "html.parser")
+                    text = [" ".join(s.find_all(text=True)) for s in soup.find_all("p")]
+                    text = " ".join(text)
+                    text = re.sub(r"\s{2,}", " ", text)
+                    print(text)
+                    curr_site_text_dict["total_length"] = len(text)
+                    curr_site_text_dict["text_complete"] += text
+                    text_dict_global[netloc_] = curr_site_text_dict
+        return text_dict_global
