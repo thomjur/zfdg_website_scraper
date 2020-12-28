@@ -5,11 +5,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import shutil
-import os
+import requests
+import pickle
+import os, io
+import string
+import random
 import time
 import datetime
 import re
-
+from PIL import Image
 
 class Corpus:
     '''
@@ -151,7 +155,40 @@ class Analyzer:
         '''
         return bool(urlparse(url).netloc)
 
-    def getSizeAsInt(self, input_):
+    def getImageSize_(self, original_website, relative_url):
+        '''
+        try and retrieve image information directly from website
+        '''
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
+        }
+        image_url = urljoin(original_website, relative_url)
+        print(image_url)
+        try:
+            req = requests.get(image_url, headers=headers, stream=True, timeout=10)
+            img = io.BytesIO(req.content)
+            img = Image.open(img)
+            time.sleep(1)
+            print("sleeping")
+            CURR_DIR_ = os.getcwd()
+            print(CURR_DIR_)
+            netloc_ = urlparse(image_url).netloc
+            print(netloc_)
+            random_string = ''.join(random.choice(string.ascii_letters) for x in range(5)) 
+            print(random_string)
+            save_path = CURR_DIR_ + "\Images\\" + netloc_ + random_string + "." + image_url.split(".")[-1]
+            print(f"Trying to save here: {save_path}")
+            if img.size[0] != 1:
+                img.save(save_path)
+                print(img.size)
+                return img.size
+            else:
+                print("Image too small, not counted!")
+                return (-1,-1)
+        except:
+            return (-1,-1)
+
+    def getSizeAsInt_(self, input_):
         '''
         try and convert values in dict["height"] and dict["width"] to int
         '''
@@ -167,6 +204,10 @@ class Analyzer:
         creating dict of dicts with information about images on website
         '''
         directory = self.directory
+        # the original websites are needed to get image information from original website
+        with open("websites.txt", "r") as f:
+            websiteList = f.readlines()
+            original_websites = [website.split(",")[0] for website in websiteList if website != ""]
         img_dict_global = dict()
         for entry in os.scandir(directory):
             if entry.path.endswith(".html"):
@@ -191,9 +232,20 @@ class Analyzer:
                     curr_site_img_dict["total_images"] = len(img_elems)
                     for img in img_elems:
                         curr_site_img_dict["images"][img.get("src")] = {
-                            "width": self.getSizeAsInt(img.get("width")),
-                            "height": self.getSizeAsInt(img.get("height")) 
+                            "width": self.getSizeAsInt_(img.get("width")),
+                            "height": self.getSizeAsInt_(img.get("height")) 
                         }
+                        # if the display information is not given as part of the img tag, try and retrieve size directly from image
+                        if not (img.get("width") or img.get("height")):
+                            # get main site
+                            orig_website = ""
+                            for website in original_websites:
+                                if netloc_ in website:
+                                    orig_website = website
+                            print(orig_website)
+                            w,h = self.getImageSize_(orig_website, img.get("src"))
+                            curr_site_img_dict["images"][img.get("src")]["height"] = h
+                            curr_site_img_dict["images"][img.get("src")]["width"] = w
                     # checking for big, middle, and small images
                     for src, size_dict in curr_site_img_dict["images"].items():
                         if (size_dict["height"] > 700) or (size_dict["width"] > 700):
@@ -203,8 +255,10 @@ class Analyzer:
                         elif (size_dict["height"] > 0) or (size_dict["width"] > 0):
                             curr_site_img_dict["small_images"] += 1
 
-                    curr_site_img_dict["big_images"] += curr_site_img_dict["background_images"]
                     img_dict_global[netloc_] = curr_site_img_dict
+
+        with open("image_data.pickle", "wb") as f:
+            pickle.dump(img_dict_global, f)    
 
         return img_dict_global
 
