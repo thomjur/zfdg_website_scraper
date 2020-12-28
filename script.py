@@ -1,4 +1,5 @@
 from scraper import Scraper, Corpus, Analyzer
+import pandas as pd
 
 '''
 IMPORTANT NOTE: Make sure that you have an Edge browser + webdriver installed, otherwise the program does not work
@@ -15,9 +16,9 @@ def initialize():
         new_corpus.initCorpus()
     elif user_input == "2":
         ana = Analyzer()
-        text_dict = ana.getText()
-        print(text_dict["credo-kirche.de"])
-        input("Press key to exit.")
+        images_dict = ana.getImages()
+        df = pd.DataFrame.from_dict(images_dict, orient="index")
+        print(df.to_markdown())
 
 if __name__ == "__main__":
     initialize() 

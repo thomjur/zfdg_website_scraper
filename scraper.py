@@ -118,8 +118,7 @@ class Scraper:
         '''
             headless initialization of the edge browser with webdriver
         '''
-        return webdriver.Edge(
-            "D:\edgedriver_win64\msedgedriver.exe")
+        return webdriver.Edge("webdriver/msedgedriver.exe")
 
     # public methods (alphabetical order)
 

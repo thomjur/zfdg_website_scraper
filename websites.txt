@@ -61,7 +61,6 @@ https://www.rwe.com/,eco
 https://www.cicero.de/,news
 https://www.tagesspiegel.de/,news
 https://www.bild.de/,news
-https://www.twitch.tv/,soc
 https://magazin.comunio.de/,blog
 http://lustich.de/,blog
 https://herzelieb.de/,blog

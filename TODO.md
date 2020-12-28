@@ -6,4 +6,6 @@
         - internal (DONE)
         - external (DONE)
     - get all images (DONE)
-        - sizes (??DONE) maybe add other size indicators 
+        - sizes (??DONE) maybe add other size indicators
+    - get Bootstrap Elements:
+        - Caroussel

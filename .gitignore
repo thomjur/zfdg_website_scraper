@@ -6,3 +6,4 @@ env-win/
 .vscode/
 corpus_info.ipynb
 .ipynb_checkpoints
+env-win-bigm/
