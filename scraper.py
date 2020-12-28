@@ -151,6 +151,15 @@ class Analyzer:
         '''
         return bool(urlparse(url).netloc)
 
+    def getSizeAsInt(self, input_):
+        '''
+        try and convert values in dict["height"] and dict["width"] to int
+        '''
+        try:
+            return int(re.sub(r"\D","", input_)) if input_ else -1
+        except:
+            return -1
+
     # public methods
 
     def getImages(self):
@@ -166,7 +175,13 @@ class Analyzer:
                 netloc_ = netloc_.replace(
                     ".html", "").replace("www.", "").strip()
                 curr_site_img_dict = {
-                    "total_images": 0, "images": dict()}
+                    "total_images": 0,
+                    "big_images": 0,
+                    "middle_images": 0,
+                    "small_images": 0,
+                    "background_images": 0,
+                    "images": dict()
+                    }
                 with open(entry.path, "r", encoding="utf-8") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
                     img_elems = soup.find_all("img")
@@ -176,9 +191,19 @@ class Analyzer:
                     curr_site_img_dict["total_images"] = len(img_elems)
                     for img in img_elems:
                         curr_site_img_dict["images"][img.get("src")] = {
-                            "width": img.get("width"),
-                            "height": img.get("height")
+                            "width": self.getSizeAsInt(img.get("width")),
+                            "height": self.getSizeAsInt(img.get("height")) 
                         }
+                    # checking for big, middle, and small images
+                    for src, size_dict in curr_site_img_dict["images"].items():
+                        if (size_dict["height"] > 700) or (size_dict["width"] > 700):
+                            curr_site_img_dict["big_images"] += 1
+                        elif (size_dict["height"] > 400) or (size_dict["width"] > 400):
+                            curr_site_img_dict["middle_images"] += 1
+                        elif (size_dict["height"] > 0) or (size_dict["width"] > 0):
+                            curr_site_img_dict["small_images"] += 1
+
+                    curr_site_img_dict["big_images"] += curr_site_img_dict["background_images"]
                     img_dict_global[netloc_] = curr_site_img_dict
 
         return img_dict_global

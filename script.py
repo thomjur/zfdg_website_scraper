@@ -18,6 +18,7 @@ def initialize():
         ana = Analyzer()
         images_dict = ana.getImages()
         df = pd.DataFrame.from_dict(images_dict, orient="index")
+        df = df.drop(["images"], axis=1)
         print(df.to_markdown())
 
 if __name__ == "__main__":
