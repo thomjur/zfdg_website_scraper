@@ -3,7 +3,7 @@
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, parse_qs
 import shutil
 import requests
 import pickle
@@ -163,30 +163,68 @@ class Analyzer:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
         }
         image_url = urljoin(original_website, relative_url)
-        print(image_url)
-        try:
-            req = requests.get(image_url, headers=headers, stream=True, timeout=10)
-            img = io.BytesIO(req.content)
-            img = Image.open(img)
-            time.sleep(1)
-            print("sleeping")
-            CURR_DIR_ = os.getcwd()
-            print(CURR_DIR_)
-            netloc_ = urlparse(image_url).netloc
-            print(netloc_)
-            random_string = ''.join(random.choice(string.ascii_letters) for x in range(5)) 
-            print(random_string)
-            save_path = CURR_DIR_ + "\Images\\" + netloc_ + random_string + "." + image_url.split(".")[-1]
-            print(f"Trying to save here: {save_path}")
-            if img.size[0] != 1:
-                img.save(save_path)
-                print(img.size)
-                return img.size
-            else:
-                print("Image too small, not counted!")
+        # check if url has query string
+        if urlparse(image_url).query != "":
+            try:
+                print("Found query string in address!")
+                print(image_url)
+                parsed_url = urlparse(image_url)
+                query_part = parsed_url.query
+                clean_image_url = parsed_url.geturl().split("?")[0]
+                req = requests.get(clean_image_url, headers=headers, stream=True, timeout=10)
+                img = io.BytesIO(req.content)
+                img = Image.open(img)
+                print(f"New URL: {clean_image_url}")
+                time.sleep(1)
+                netloc_ = urlparse(clean_image_url).netloc
+                random_string = ''.join(random.choice(string.ascii_letters) for x in range(5)) 
+                save_path = CURR_DIR_ + "\Images\\" + netloc_ + random_string + "." + clean_image_url.split(".")[-1]
+                print(f"Trying to save here: {save_path}")
+                query_dict = parse_qs(query_part)
+                if (query_dict.get("h") or query_dict.get("w")):
+                    print("Getting sizes from query string!")
+                    w = -1
+                    h = -1
+                    if query_dict.get("h"):
+                        h = self.getSizeAsInt_(query_dict["h"][0])
+                    if query_dict.get("w"):
+                        w = self.getSizeAsInt_(query_dict["w"][0])
+                    img.save(save_path)
+                    print((w,h))
+                    return (w,h)
+                elif img.size[0] != 1:
+                    img.save(save_path)
+                    print(img.size)
+                    return img.size
+                else:
+                    print("Image too small or does not exist, not counted!")
+                    return (-1,-1)
+            except Exception as e:
+                print(e)
                 return (-1,-1)
-        except:
-            return (-1,-1)
+        else:
+            print("No query string found!")
+            print(image_url)
+            try:
+                req = requests.get(image_url, headers=headers, stream=True, timeout=10)
+                img = io.BytesIO(req.content)
+                img = Image.open(img)
+                time.sleep(1)
+                CURR_DIR_ = os.getcwd()
+                netloc_ = urlparse(image_url).netloc
+                random_string = ''.join(random.choice(string.ascii_letters) for x in range(5)) 
+                save_path = CURR_DIR_ + "\Images\\" + netloc_ + random_string + "." + image_url.split(".")[-1]
+                print(f"Trying to save here: {save_path}")
+                if img.size[0] != 1:
+                    img.save(save_path)
+                    print(img.size)
+                    return img.size
+                else:
+                    print("Image too small, not counted!")
+                    return (-1,-1)
+            except Exception as e:
+                print(e)
+                return (-1,-1)
 
     def getSizeAsInt_(self, input_):
         '''
