@@ -1,7 +1,7 @@
 # Features to add
 
 - builtwith integration
-- analyzer class
+- DataPreparation class
     - get all links (DONE)
         - internal (DONE)
         - external (DONE)
@@ -10,9 +10,12 @@
     - get Bootstrap Elements:
         - Caroussel
 
+# Allgemeines Zeug
+
+- add domain to data_dict
+- Reduzierung der Features auf:
+  - Bilder
+  - Bilder und Text
 
 # Image Retrieval
 
-- get rid of "?" query part of links
-- sort out pages that didn't really work (adidas, sueddeutsche etc.)
-- if size == (1,1): dont save

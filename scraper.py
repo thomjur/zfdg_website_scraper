@@ -135,13 +135,14 @@ class Scraper:
             f.write(str(self.websiteHTML))
 
 
-class Analyzer:
+class DataPreparation:
     '''
-        analyzes the websites stored in .\CorpusData
+        extracts features from websites stored in .\CorpusData
         ** internal and external links
         ** number of images
-        ** image size
-        ** text analysis (?)
+        ** image sizes
+        ** text length
+        ** builtwith (TODO)
     '''
 
     def __init__(self):
@@ -157,12 +158,16 @@ class Analyzer:
 
     def getImageSize_(self, original_website, relative_url):
         '''
-        try and retrieve image information directly from website
+        try and retrieve image information directly from website; small images (1px) and .svg are not counted
         '''
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
         }
         image_url = urljoin(original_website, relative_url)
+        # preparing parts of filename (final name is created in the if branches)
+        CURR_DIR_ = os.getcwd()
+        random_string = ''.join(random.choice(string.ascii_letters) for x in range(5))
+        netloc_ = urlparse(image_url).netloc
         # check if url has query string
         if urlparse(image_url).query != "":
             try:
@@ -176,10 +181,7 @@ class Analyzer:
                 img = Image.open(img)
                 print(f"New URL: {clean_image_url}")
                 time.sleep(1)
-                netloc_ = urlparse(clean_image_url).netloc
-                random_string = ''.join(random.choice(string.ascii_letters) for x in range(5)) 
                 save_path = CURR_DIR_ + "\Images\\" + netloc_ + random_string + "." + clean_image_url.split(".")[-1]
-                print(f"Trying to save here: {save_path}")
                 query_dict = parse_qs(query_part)
                 if (query_dict.get("h") or query_dict.get("w")):
                     print("Getting sizes from query string!")
@@ -210,9 +212,6 @@ class Analyzer:
                 img = io.BytesIO(req.content)
                 img = Image.open(img)
                 time.sleep(1)
-                CURR_DIR_ = os.getcwd()
-                netloc_ = urlparse(image_url).netloc
-                random_string = ''.join(random.choice(string.ascii_letters) for x in range(5)) 
                 save_path = CURR_DIR_ + "\Images\\" + netloc_ + random_string + "." + image_url.split(".")[-1]
                 print(f"Trying to save here: {save_path}")
                 if img.size[0] != 1:
@@ -236,6 +235,25 @@ class Analyzer:
             return -1
 
     # public methods
+
+    def createAnalyzerDict(self):
+        '''
+        function to merge analysis dicts; expects that an image_dict.pickle is already stored in the folder; stores merged dict in folder
+        '''
+        image_dict = self.getImagesFromPickle()
+        text_dict = self.getText()
+        link_dict = self.getLinks()
+        for key, val in image_dict.items():
+            image_dict[key] = val | text_dict[key] | link_dict[key]
+        with open("merged_data_dict.pickle", "wb") as f:
+            pickle.dump(image_dict, f)
+        return image_dict
+        
+    def getBuiltWith(self):
+        '''
+        getting information from builtwith TODO
+        '''
+        pass
 
     def getImages(self):
         '''
@@ -300,6 +318,19 @@ class Analyzer:
 
         return img_dict_global
 
+    def getImagesFromPickle(self):
+        '''
+        loading image dict stored in a .pickle file
+        '''
+        with open("image_data.pickle", "rb") as f:
+            image_dict = pickle.load(f)
+        
+        if image_dict:
+            return image_dict
+        else:
+            print("No image dict available!")
+            return None
+
     def getLinks(self):
         '''
         creating a dict of dicts with information about internal and external links on website
@@ -342,10 +373,11 @@ class Analyzer:
                 #print(f"Current netloc {netloc_} of type {type(netloc_)}")
                 with open(entry.path, "r", encoding="utf-8") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
-                    text = [" ".join(s.find_all(text=True)) for s in soup.find_all("p")]
-                    text = " ".join(text)
+                    text_p = [" ".join(s.find_all(text=True)) for s in soup.find_all("p")]
+                    text_h = [" ".join(s.find_all(text=True)) for s in soup.find_all(re.compile("h\d+"))]
+                    text_s = [" ".join(s.find_all(text=True)) for s in soup.find_all("span")]
+                    text = " ".join([" ".join(text_p), " ".join(text_h), " ".join(text_s)])
                     text = re.sub(r"\s{2,}", " ", text)
-                    print(text)
                     curr_site_text_dict["total_length"] = len(text)
                     curr_site_text_dict["text_complete"] += text
                     text_dict_global[netloc_] = curr_site_text_dict
