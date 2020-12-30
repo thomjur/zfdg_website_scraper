@@ -153,6 +153,25 @@ class DataPreparation:
         checks if a URL is relative or absolute
         '''
         return bool(urlparse(url).netloc)
+    
+    def getBackgroundImageURL(self, img_list):
+        '''
+        PRIVATE function to get urls from background-images in style elements
+        '''
+        url_list = []
+        if img_list:
+            for img in img_list:
+                    match = re.search(r"url\((.*?)\)", img["style"])
+                    if match:
+                        print(f"Found background-image URL! {match.group(1)}")
+                        url = re.sub(r"[\"']+", "", match.group(1).strip())
+                        # since the other elems are img tags, we need to create an artificial <img> elem with link too
+                        if url:
+                            soup_ = BeautifulSoup("", 'html.parser')
+                            url = soup_.new_tag('img', src=url)
+                            url_list.append(url)
+        return url_list
+
 
     def getImageSize_(self, original_website, relative_url):
         '''
@@ -280,10 +299,14 @@ class DataPreparation:
                 with open(entry.path, "r", encoding="utf-8") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
                     img_elems = soup.find_all("img")
-                    # add number of background images; they are automatically regarded as huge images
+                    # add number of background images
                     img_background = soup.find_all(style=re.compile(r"background-image:"))
                     print(img_background)
-                    # add background_img urls to img_elems //TODO
+                    # get urls form background-images and add background_img urls to img_elems
+                    if img_background:
+                        bck_images_urls = self.getBackgroundImageURL(img_background)
+                        img_elems = img_elems + bck_images_urls
+                        print(img_elems)
                     curr_site_img_dict["background_images"] = len(img_background)
                     curr_site_img_dict["total_images"] = len(img_elems)
                     for img in img_elems:
