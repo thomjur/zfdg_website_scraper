@@ -1,7 +1,6 @@
 # scraper class for the main script
 
 from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse, parse_qs
 import shutil
@@ -106,14 +105,13 @@ class Scraper:
         self.browser.get(self.websiteOriginal)
         # trying to accept data policy consents
         try:
-            WebDriverWait(self.browser, 2)
+            self.browser.implicitly_wait(3)
             self.browser.find_element_by_xpath(
                 "//input[@type='submit' and (@value='OK' or @value='Ich stimme zu')]").click()
-            WebDriverWait(self.browser, 2)
         except:
             print("Couldn't find consent submission on this page!")
 
-        WebDriverWait(self.browser, 3)
+        self.browser.implicitly_wait(2)
         page = self.browser.page_source
         self.browser.close()
         return page
@@ -284,6 +282,8 @@ class DataPreparation:
                     img_elems = soup.find_all("img")
                     # add number of background images; they are automatically regarded as huge images
                     img_background = soup.find_all(style=re.compile(r"background-image:"))
+                    print(img_background)
+                    # add background_img urls to img_elems //TODO
                     curr_site_img_dict["background_images"] = len(img_background)
                     curr_site_img_dict["total_images"] = len(img_elems)
                     for img in img_elems:
@@ -359,8 +359,7 @@ class DataPreparation:
 
     def getText(self):
         '''
-        get and count all text stored in <p> tags
-        TODO: maybe add text from other elements as well? (li)
+        get text with bs get_text() method; excluding javascript first
         '''
         directory = self.directory
         text_dict_global = dict()
@@ -373,12 +372,11 @@ class DataPreparation:
                 #print(f"Current netloc {netloc_} of type {type(netloc_)}")
                 with open(entry.path, "r", encoding="utf-8") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
-                    text_p = [" ".join(s.find_all(text=True)) for s in soup.find_all("p")]
-                    text_h = [" ".join(s.find_all(text=True)) for s in soup.find_all(re.compile("h\d+"))]
-                    text_s = [" ".join(s.find_all(text=True)) for s in soup.find_all("span")]
-                    text = " ".join([" ".join(text_p), " ".join(text_h), " ".join(text_s)])
+                    [x.extract() for x in soup.find_all('script')]
+                    text = soup.get_text()
+                    text = re.sub(r"\n|\t", " ", text)
                     text = re.sub(r"\s{2,}", " ", text)
                     curr_site_text_dict["total_length"] = len(text)
-                    curr_site_text_dict["text_complete"] += text
+                    curr_site_text_dict["text_complete"] = text
                     text_dict_global[netloc_] = curr_site_text_dict
         return text_dict_global

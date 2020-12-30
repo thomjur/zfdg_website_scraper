@@ -1,5 +1,6 @@
 from sklearn.preprocessing import StandardScaler as SS
 from sklearn.cluster import KMeans
+import seaborn as sns
 import pandas as pd
 import pickle
 
@@ -62,3 +63,9 @@ class Analyzer():
         df_cp["internal_links_scaled"] = scaled_columns[:,7]
         df_cp["total_links_scaled"] = scaled_columns[:,8]
         return df_cp.iloc[:,9:]
+
+    def visualizeCluster(self, clustered_df, column1, column2):
+        '''
+        visualize a cluster based on two columns
+        '''
+        sns.scatterplot(x=column1, y=column2, hue="clusters", data=clustered_df)
