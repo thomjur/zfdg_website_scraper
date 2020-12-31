@@ -2,6 +2,7 @@ from sklearn.preprocessing import StandardScaler as SS
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import pickle, sys
@@ -14,6 +15,8 @@ class Analyzer():
     def __init__(self):
         self.data_dict = self.openDataDict_()
         self.data_df = self.convertDict2Df_()
+        self.column_selection = ["total_images", "big_images", "middle_images", "small_images", "background_images",
+                                                "total_length", "external_links", "internal_links", "total_links"]
 
     # private methods
 
@@ -68,6 +71,12 @@ class Analyzer():
         cosine_data = cosine_similarity(df)
         return pd.DataFrame(cosine_data, columns=df.index, index=df.index)
 
+    def getColumnSelection(self):
+        '''
+        returns the currently set columns for KMeans standardization and clustering process; can be reset with setColumnSelection(); DEFAULT is all columns
+        '''
+        print(f"Currently, the following columns are selected: {self.column_selection}")
+
     def clusterDataKMeans(self, df_scaled, n=3):
         '''
         clustering data with 3 KMeans
@@ -78,24 +87,43 @@ class Analyzer():
         df_cp["clusters"] = kmeans.labels_
         return df_cp
 
+    def createElbowPlot(self, df):
+        '''
+        create an elbow plot for a dataframe
+        '''
+        cluster_range = list(range(2,9))
+        inertia_list = []
+        print(f"Creating elbow plot in range between {cluster_range} n for KMeans.")
+        for k in cluster_range:
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans.fit(df)
+            inertia_list.append(kmeans.inertia_)
+        # plotting
+        fig = plt.figure(figsize=(7,7))
+        ax = fig.add_subplot(111)
+        sns.lineplot(y=inertia_list, x=cluster_range, ax=ax)
+        ax.set_xlabel("Clusters")
+        ax.set_ylabel("Inertia")
+        ax.set_xticks(cluster_range)
+        plt.show()
+
+    def setColumnSelection(self, list_):
+        '''
+        allows to set columns from self.data_df that should be included in the KMeans standardization and clustering process; DEFAULT is all columns are selected
+        '''
+        self.column_selection = list_
+        print("Columns successfully changed!")
+
     def standardizeData(self, df_orig):
         '''
         standardize data with the help of sklearn's StandardScaler() class
         '''
         scaler = SS()
-        scaled_columns = scaler.fit_transform(df_orig[["total_images", "big_images", "middle_images", "small_images", "background_images",
-                                                "total_length", "external_links", "internal_links", "total_links"]])
-        df_cp = df_orig.copy()
-        df_cp["total_images_scaled"] = scaled_columns[:,0]
-        df_cp["big_images_scaled"] = scaled_columns[:,1]
-        df_cp["middle_images_scaled"] = scaled_columns[:,2]
-        df_cp["small_images_scaled"] = scaled_columns[:,3]
-        df_cp["background_images_scaled"] = scaled_columns[:,4]
-        df_cp["total_length_scaled"] = scaled_columns[:,5]
-        df_cp["external_links_scaled"] = scaled_columns[:,6]
-        df_cp["internal_links_scaled"] = scaled_columns[:,7]
-        df_cp["total_links_scaled"] = scaled_columns[:,8]
-        return df_cp.iloc[:,9:]
+        scaled_columns = scaler.fit_transform(df_orig[self.column_selection])
+        df_cp = df_orig[self.column_selection].copy()
+        for num, column in enumerate(self.column_selection):
+            df_cp[column + "_scaled"] = scaled_columns[:,num]
+        return df_cp.iloc[:,len(self.column_selection):]
 
     def visualizeCluster(self, clustered_df, column1, column2):
         '''
