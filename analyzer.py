@@ -3,6 +3,7 @@ from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
 import pandas as pd
 import pickle, sys
@@ -37,6 +38,25 @@ class Analyzer():
                 return -1
         except:
             raise Exception("Sorry, a problem occurred! Remember that merged_data_dict.pickle needs to be present in folder! Create first with DataPreparation() class!")
+
+    def showWebsitesInCluster_(self, clustered_df):
+        '''
+        show websites ordered by cluster; part of clusteringKMeans()
+        '''
+        with open("websites.txt", "r", encoding="utf-8") as f:
+            orig_websites = f.readlines()
+        clusters = np.sort(clustered_df["clusters"].unique())
+        for cluster in clusters:
+            print(f"Websites in cluster {cluster}:")
+            print("-----------------------------------------------")
+            print()
+            for row in clustered_df[clustered_df["clusters"] == cluster].iterrows():
+                print(row[0])
+                for website in orig_websites:
+                    if row[0] in website:
+                        print(website.split(",")[0])
+            print()
+        
 
     # public methods
 
@@ -85,6 +105,7 @@ class Analyzer():
         kmeans.fit(df_scaled)
         df_cp = df_scaled.copy()
         df_cp["clusters"] = kmeans.labels_
+        self.showWebsitesInCluster_(df_cp)
         return df_cp
 
     def createElbowPlot(self, df):

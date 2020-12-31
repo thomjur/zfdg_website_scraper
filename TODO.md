@@ -13,9 +13,4 @@
 # Allgemeines Zeug
 
 - add domain to data_dict
-- Reduzierung der Features auf:
-  - Bilder
-  - Bilder und Text
-
-# Image Retrieval
-
+- feature weights for KMeans?
