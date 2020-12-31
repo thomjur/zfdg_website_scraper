@@ -11,6 +11,7 @@ import string
 import random
 import time
 import datetime
+from builtwith import builtwith
 import re
 from PIL import Image
 
@@ -268,9 +269,44 @@ class DataPreparation:
         
     def getBuiltWith(self):
         '''
-        getting information from builtwith TODO
+        getting built information from CorpusData with builtwith
         '''
-        pass
+        directory = self.directory
+        builtwith_dict = dict()
+        # the original websites are needed to get image information from original website
+        with open("websites.txt", "r") as f:
+            websiteList = f.readlines()
+            original_websites = [website.split(",")[0] for website in websiteList if website != ""]
+        for entry in os.scandir(directory):
+            if entry.path.endswith(".html"):
+                # getting url of current site + cleaning
+                _, netloc_ = os.path.split(entry.path)
+                netloc_ = netloc_.replace(
+                    ".html", "").replace("www.", "").strip()
+                orig_website = ""
+                for website in original_websites:
+                    if netloc_ in website:
+                        orig_website = website
+                try:
+                    bw_dict = builtwith(orig_website)
+                    builtwith_dict[netloc_] = bw_dict
+                except Exception as e:
+                    print(e)
+        with open("builtwith.pickle", "wb") as f:
+            pickle.dump(builtwith_dict, f)
+        return builtwith_dict
+
+    def getBuiltWithFromPickle(self):
+        '''
+        opening and returning dict from pickle file (if it exists)
+        '''
+        try:
+            with open("builtwith.pickle", "rb") as f:
+                dd_ = pickle.load(f)
+            return dd_
+        except:
+            print("Pickle file does not seem to exist. Run DataPreparation.getBuiltWith() first to create dict.pickle")
+            return -1
 
     def getImages(self):
         '''

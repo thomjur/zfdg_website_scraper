@@ -1,6 +1,6 @@
 # Features to add
 
-- builtwith integration
+- builtwith integration (DONE)
 - DataPreparation class
     - get all links (DONE)
         - internal (DONE)

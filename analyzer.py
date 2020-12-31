@@ -1,8 +1,10 @@
 from sklearn.preprocessing import StandardScaler as SS
+from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
 import seaborn as sns
 import pandas as pd
-import pickle
+import pickle, sys
 
 class Analyzer():
     '''
@@ -35,7 +37,38 @@ class Analyzer():
 
     # public methods
 
-    def clusterData(self, df_scaled, n=3):
+    def getBuiltWithCategorical(self):
+        '''
+        creates a dataframe with one hot encoding of information stored in builtwith.pickle; this can be used with cluserData()
+        '''
+        try:
+            with open("builtwith.pickle", "rb") as f:
+                bw_dict = pickle.load(f)
+        except:
+            print("Please create builtwith.pickle with DataPreparation class first! Closing...")
+            sys.exit()
+            
+        df = pd.DataFrame.from_dict(bw_dict, orient="index")
+        new_frame = pd.DataFrame(index=df.index)
+        # I have completely forgotten what's going on here... but it work :D
+        for num, column in enumerate(df.columns):
+            zero_ = f"zero_{num}"
+            col_ = df[column].fillna(zero_)
+            col_ = col_.apply(lambda x: [x] if x == zero_ else x)
+            mlb = MultiLabelBinarizer()
+            nuu = mlb.fit_transform(col_)
+            nuuu = pd.DataFrame(nuu, columns=mlb.classes_, index=df.index).drop(columns=[zero_])
+            new_frame = pd.concat([new_frame, nuuu], axis=1)
+        return new_frame
+
+    def getCosine4CategoricalData(self, df):
+        '''
+        getting cosine similarity for df with one hot encoded categorical features
+        '''
+        cosine_data = cosine_similarity(df)
+        return pd.DataFrame(cosine_data, columns=df.index, index=df.index)
+
+    def clusterDataKMeans(self, df_scaled, n=3):
         '''
         clustering data with 3 KMeans
         '''
