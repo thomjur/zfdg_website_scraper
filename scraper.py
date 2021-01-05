@@ -274,7 +274,7 @@ class DataPreparation:
         directory = self.directory
         builtwith_dict = dict()
         # the original websites are needed to get image information from original website
-        with open("websites.txt", "r") as f:
+        with open("websites_bw.txt", "r") as f:
             websiteList = f.readlines()
             original_websites = [website.split(",")[0] for website in websiteList if website != ""]
         for entry in os.scandir(directory):
@@ -288,6 +288,9 @@ class DataPreparation:
                     if netloc_ in website:
                         orig_website = website
                 try:
+                    if orig_website[-1] == "/":
+                        orig_website = orig_website[:-1]
+                    print(orig_website)
                     bw_dict = builtwith(orig_website)
                     builtwith_dict[netloc_] = bw_dict
                 except Exception as e:

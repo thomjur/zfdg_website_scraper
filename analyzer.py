@@ -26,6 +26,12 @@ class Analyzer():
         converting self.data_dict to pandas DataFrame
         '''
         return pd.DataFrame.from_dict(self.data_dict, orient="index").drop(columns=["images", "text_complete"])
+
+    def getWebsiteCategories_(self, df):
+        '''
+        this private method looks for the categories of the websites and adds them in a separate column to the input dataframe
+        '''
+        pass
     
     def openDataDict_(self):
         try:
