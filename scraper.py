@@ -155,11 +155,12 @@ class DataPreparation:
         '''
         return bool(urlparse(url).netloc)
     
-    def getBackgroundImageURL(self, img_list):
+    def getBackgroundImageDict_(self, img_list, main_url):
         '''
         PRIVATE function to get urls from background-images in style elements
         '''
-        url_list = []
+        dict_ = dict()
+        browser = webdriver.Edge("webdriver/msedgedriver.exe")
         if img_list:
             for img in img_list:
                     match = re.search(r"url\((.*?)\)", img["style"])
@@ -168,89 +169,34 @@ class DataPreparation:
                         url = re.sub(r"[\"']+", "", match.group(1).strip())
                         # since the other elems are img tags, we need to create an artificial <img> elem with link too
                         if url:
-                            soup_ = BeautifulSoup("", 'html.parser')
-                            url = soup_.new_tag('img', src=url)
-                            url_list.append(url)
-        return url_list
+                            absolute_path = urljoin(main_url, url)
+                            browser.get(url)
+                            browser.implicitly_wait(5)
+                            try:
+                                image = browser.find_element_by_tag_name("img")
+                                if image:
+                                    dict_[absolute_path] = image.size
+                                browser.implicitly_wait(3)
+                            except Exception as e:
+                                print(e)
+        browser.quit()
+        return dict_
 
-
-    def getImageSize_(self, original_website, relative_url):
+    def getImageDict_(self, url):
         '''
-        try and retrieve image information directly from website; small images (1px) and .svg are not counted
+        get image information as dict with URL as key and size as value for a website; CAREFUL: only works with edge browser and webdriver installed in the folder "webdriver"
         '''
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
-        }
-        image_url = urljoin(original_website, relative_url)
-        # preparing parts of filename (final name is created in the if branches)
-        CURR_DIR_ = os.getcwd()
-        random_string = ''.join(random.choice(string.ascii_letters) for x in range(5))
-        netloc_ = urlparse(image_url).netloc
-        # check if url has query string
-        if urlparse(image_url).query != "":
-            try:
-                print("Found query string in address!")
-                print(image_url)
-                parsed_url = urlparse(image_url)
-                query_part = parsed_url.query
-                clean_image_url = parsed_url.geturl().split("?")[0]
-                req = requests.get(clean_image_url, headers=headers, stream=True, timeout=10)
-                img = io.BytesIO(req.content)
-                img = Image.open(img)
-                print(f"New URL: {clean_image_url}")
-                time.sleep(1)
-                save_path = CURR_DIR_ + "\Images\\" + netloc_ + random_string + "." + clean_image_url.split(".")[-1]
-                query_dict = parse_qs(query_part)
-                if (query_dict.get("h") or query_dict.get("w")):
-                    print("Getting sizes from query string!")
-                    w = -1
-                    h = -1
-                    if query_dict.get("h"):
-                        h = self.getSizeAsInt_(query_dict["h"][0])
-                    if query_dict.get("w"):
-                        w = self.getSizeAsInt_(query_dict["w"][0])
-                    img.save(save_path)
-                    print((w,h))
-                    return (w,h)
-                elif img.size[0] != 1:
-                    img.save(save_path)
-                    print(img.size)
-                    return img.size
-                else:
-                    print("Image too small or does not exist, not counted!")
-                    return (-1,-1)
-            except Exception as e:
-                print(e)
-                return (-1,-1)
-        else:
-            print("No query string found!")
-            print(image_url)
-            try:
-                req = requests.get(image_url, headers=headers, stream=True, timeout=10)
-                img = io.BytesIO(req.content)
-                img = Image.open(img)
-                time.sleep(1)
-                save_path = CURR_DIR_ + "\Images\\" + netloc_ + random_string + "." + image_url.split(".")[-1]
-                print(f"Trying to save here: {save_path}")
-                if img.size[0] != 1:
-                    img.save(save_path)
-                    print(img.size)
-                    return img.size
-                else:
-                    print("Image too small, not counted!")
-                    return (-1,-1)
-            except Exception as e:
-                print(e)
-                return (-1,-1)
-
-    def getSizeAsInt_(self, input_):
-        '''
-        try and convert values in dict["height"] and dict["width"] to int
-        '''
-        try:
-            return int(re.sub(r"\D","", input_)) if input_ else -1
-        except:
-            return -1
+        browser = webdriver.Edge("webdriver/msedgedriver.exe")
+        browser.get(url)
+        browser.implicitly_wait(5)
+        image_dict = dict()
+        image_list = browser.find_elements_by_tag_name("img")
+        for image in image_list:
+            if image.is_displayed():
+                image_dict[image.get_attribute("src")] = image.size
+        browser.implicitly_wait(2)
+        browser.quit()
+        return image_dict
 
     # public methods
 
@@ -327,6 +273,10 @@ class DataPreparation:
                 _, netloc_ = os.path.split(entry.path)
                 netloc_ = netloc_.replace(
                     ".html", "").replace("www.", "").strip()
+                # get original URL to retreive image information
+                for website in original_websites:
+                    if netloc_ in website:
+                        original_website = website
                 curr_site_img_dict = {
                     "total_images": 0,
                     "big_images": 0,
@@ -337,35 +287,21 @@ class DataPreparation:
                     }
                 with open(entry.path, "r", encoding="utf-8") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
-                    img_elems = soup.find_all("img")
-                    # add number of background images
+                    img_dict = self.getImageDict_(original_website)
+                    # checking for background-images in styles via bs
+                    print("Checking background images...")
+                    background_images = list()
                     img_background = soup.find_all(style=re.compile(r"background-image:"))
-                    print(img_background)
-                    # get urls form background-images and add background_img urls to img_elems
+                    # get urls form background-images and add background_img urls to background_images list
                     if img_background:
-                        bck_images_urls = self.getBackgroundImageURL(img_background)
-                        img_elems = img_elems + bck_images_urls
-                        print(img_elems)
-                    curr_site_img_dict["background_images"] = len(img_background)
-                    curr_site_img_dict["total_images"] = len(img_elems)
-                    for img in img_elems:
-                        curr_site_img_dict["images"][img.get("src")] = {
-                            "width": self.getSizeAsInt_(img.get("width")),
-                            "height": self.getSizeAsInt_(img.get("height")) 
-                        }
-                        # if the display information is not given as part of the img tag, try and retrieve size directly from image
-                        if not (img.get("width") or img.get("height")):
-                            # get main site
-                            orig_website = ""
-                            for website in original_websites:
-                                if netloc_ in website:
-                                    orig_website = website
-                            print(orig_website)
-                            w,h = self.getImageSize_(orig_website, img.get("src"))
-                            curr_site_img_dict["images"][img.get("src")]["height"] = h
-                            curr_site_img_dict["images"][img.get("src")]["width"] = w
+                        background_images_dict = self.getBackgroundImageDict_(img_background, original_website)
+                        img_dict = img_dict | background_images_dict
+                    curr_site_img_dict["background_images"] = len(background_images)
+                    curr_site_img_dict["total_images"] = len(img_dict.keys())
+                    curr_site_img_dict["images"] = img_dict
+                    print(img_dict)
                     # checking for big, middle, and small images
-                    for src, size_dict in curr_site_img_dict["images"].items():
+                    for _, size_dict in curr_site_img_dict["images"].items():
                         if (size_dict["height"] > 700) or (size_dict["width"] > 700):
                             curr_site_img_dict["big_images"] += 1
                         elif (size_dict["height"] > 400) or (size_dict["width"] > 400):
