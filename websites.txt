@@ -1,1 +1,12 @@
+https://marginalie.hypotheses.org/,blog
+https://www.oma-kocht.de/,blog
+https://www.windows-faq.de/,blog
+https://www.gamestar.de/,news
+https://www.faz.net/aktuell/,news
 https://www.nytimes.com/,news
+https://www.wind-energie.de/die-windkraft/,kampagne
+https://www.netzwerk-ebd.de/,kampagne
+https://www.liebesleben.de/,kampagne
+https://www.ekd.de/,image
+https://www.spd.de/,image
+https://www.nike.com/,image

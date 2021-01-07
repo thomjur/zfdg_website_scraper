@@ -2,11 +2,13 @@ from sklearn.preprocessing import StandardScaler as SS
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
+from selenium import webdriver
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import pandas as pd
 import pickle, sys
+import shutil, os
 
 class Analyzer():
     '''
@@ -17,7 +19,10 @@ class Analyzer():
         self.data_dict = self.openDataDict_()
         self.data_df = self.convertDict2Df_()
         self.column_selection = ["total_images", "big_images", "middle_images", "small_images", "background_images",
-                                                "total_length", "external_links", "internal_links", "total_links"]
+                                                "total_length", "external_links", "internal_links", "total_links",
+                                                "RA_big_images/total_images", "RA_middle_images/total_images",
+                                                "RA_small_images/total_images", "RA_total_images/total_length",
+                                                "RA_internal_links/external_links"]
 
     # private methods
 
@@ -25,7 +30,14 @@ class Analyzer():
         '''
         converting self.data_dict to pandas DataFrame
         '''
-        return pd.DataFrame.from_dict(self.data_dict, orient="index").drop(columns=["images", "text_complete"])
+        df = pd.DataFrame.from_dict(self.data_dict, orient="index").drop(columns=["images", "text_complete"])
+        # creating ratios
+        df["RA_big_images/total_images"] = df["big_images"] / df["total_images"]
+        df["RA_middle_images/total_images"] = df["middle_images"] / df["total_images"]
+        df["RA_small_images/total_images"] = df["small_images"] / df["total_images"]
+        df["RA_total_images/total_length"] = df["total_images"] / df["total_length"]
+        df["RA_internal_links/external_links"] = df["internal_links"] / df["external_links"]
+        return df
 
     def getWebsiteCategories_(self, df):
         '''
@@ -41,7 +53,6 @@ class Analyzer():
                 return dd_
             else:
                 raise Exception("Sorry, merged_data_dict.pickle needs to be present in folder! Create first with DataPreparation() class!")
-                return -1
         except:
             raise Exception("Sorry, a problem occurred! Remember that merged_data_dict.pickle needs to be present in folder! Create first with DataPreparation() class!")
 
@@ -96,6 +107,34 @@ class Analyzer():
         '''
         cosine_data = cosine_similarity(df)
         return pd.DataFrame(cosine_data, columns=df.index, index=df.index)
+
+    def getScreenshotsFromClusters(self, clustered_df):
+        '''
+        this function takes a screenshot from each website and saves them in Screenshots/<Cluster>
+        '''
+        shutil.rmtree("Screenshots")
+        os.makedirs("Screenshots")
+        cluster_list = clustered_df["clusters"].unique()
+        for cluster in cluster_list:
+            os.makedirs(f"Screenshots/{cluster}")
+        browser = webdriver.Edge("webdriver/msedgedriver.exe")
+        with open("websites.txt", "r", encoding="utf-8") as f:
+            orig_websites = f.readlines()
+        for idx, row in clustered_df.iterrows():
+            print(row.name)
+            row_cluster = int(row["clusters"])
+            print(row_cluster)
+            for website in orig_websites:
+                if row.name in website:
+                    original_website = website.split(",")[0]
+            browser.get(original_website)
+            browser.maximize_window()
+            browser.implicitly_wait(5)
+            input("Press enter to continue and take screenshot of page...")
+            print(f"Screenshots/{row_cluster}/{row.name}.png")
+            browser.save_screenshot(f"Screenshots/{row_cluster}/{row.name}.png")
+        browser.quit()
+        
 
     def getColumnSelection(self):
         '''

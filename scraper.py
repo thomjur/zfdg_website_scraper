@@ -170,7 +170,8 @@ class DataPreparation:
                         # since the other elems are img tags, we need to create an artificial <img> elem with link too
                         if url:
                             absolute_path = urljoin(main_url, url)
-                            browser.get(url)
+                            browser.get(absolute_path)
+                            browser.maximize_window()
                             browser.implicitly_wait(5)
                             try:
                                 image = browser.find_element_by_tag_name("img")
@@ -188,6 +189,7 @@ class DataPreparation:
         '''
         browser = webdriver.Edge("webdriver/msedgedriver.exe")
         browser.get(url)
+        browser.maximize_window()
         browser.implicitly_wait(5)
         image_dict = dict()
         image_list = browser.find_elements_by_tag_name("img")
@@ -341,7 +343,6 @@ class DataPreparation:
                 _, netloc_ = os.path.split(entry.path)
                 netloc_ = netloc_.replace(".html", "").replace("www.", "").strip()
                 curr_site_link_dict = {"external_links": 0, "internal_links": 0}
-                print(f"Current netloc {netloc_} of type {type(netloc_)}")
                 with open(entry.path, "r", encoding="utf-8") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
                     #links_elem = soup.find_all("link")
