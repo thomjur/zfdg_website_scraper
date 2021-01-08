@@ -61,7 +61,7 @@ class Corpus:
         while(loop):
             how_many = input("How many websites do you want to scrape?")
             try:
-                cast_ = int(how_many)
+                int(how_many)
                 loop = False
             except:
                 print("Please pass a valid integer number!")
@@ -72,7 +72,7 @@ class Corpus:
             shutil.rmtree("CorpusData")
             os.makedirs("CorpusData")
             iterator_ = 0
-            for website, domain in self.websiteList:
+            for website, _ in self.websiteList:
                 if iterator_ < int(how_many):
                     new_obj = Scraper(website)
                     new_obj.saveWebsite()
@@ -135,7 +135,7 @@ class Scraper:
 
 
 class DataPreparation:
-    '''
+    r'''
         extracts features from websites stored in .\CorpusData
         ** internal and external links
         ** number of images
@@ -284,6 +284,7 @@ class DataPreparation:
                     "big_images": 0,
                     "middle_images": 0,
                     "small_images": 0,
+                    "very_small_images": 0,
                     "background_images": 0,
                     "images": dict()
                     }
@@ -291,26 +292,30 @@ class DataPreparation:
                     soup = BeautifulSoup(f.read(), "html.parser")
                     img_dict = self.getImageDict_(original_website)
                     # checking for background-images in styles via bs
+
                     print("Checking background images...")
-                    background_images = list()
                     img_background = soup.find_all(style=re.compile(r"background-image:"))
                     # get urls form background-images and add background_img urls to background_images list
                     if img_background:
                         background_images_dict = self.getBackgroundImageDict_(img_background, original_website)
                         img_dict = img_dict | background_images_dict
-                    curr_site_img_dict["background_images"] = len(background_images)
+                    else:
+                        background_images_dict = dict()
+                    curr_site_img_dict["background_images"] = len(background_images_dict.keys())
                     curr_site_img_dict["total_images"] = len(img_dict.keys())
                     curr_site_img_dict["images"] = img_dict
-                    print(img_dict)
                     # checking for big, middle, and small images
                     for _, size_dict in curr_site_img_dict["images"].items():
                         if (size_dict["height"] > 700) or (size_dict["width"] > 700):
                             curr_site_img_dict["big_images"] += 1
                         elif (size_dict["height"] > 400) or (size_dict["width"] > 400):
                             curr_site_img_dict["middle_images"] += 1
-                        elif (size_dict["height"] > 0) or (size_dict["width"] > 0):
+                        elif (size_dict["height"] > 35) or (size_dict["width"] > 35):
                             curr_site_img_dict["small_images"] += 1
-
+                        elif (size_dict["height"] > 1) or (size_dict["width"] > 1):
+                            curr_site_img_dict["very_small_images"] += 1
+                    # if there are other images smaller than 1x1 px, remove them from the overall image count
+                    curr_site_img_dict["total_images"] = curr_site_img_dict["total_images"] - (curr_site_img_dict["total_images"] - (curr_site_img_dict["big_images"] + curr_site_img_dict["middle_images"] + curr_site_img_dict["small_images"] + curr_site_img_dict["very_small_images"]))
                     img_dict_global[netloc_] = curr_site_img_dict
 
         with open("image_data.pickle", "wb") as f:

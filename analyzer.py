@@ -18,11 +18,11 @@ class Analyzer():
     def __init__(self):
         self.data_dict = self.openDataDict_()
         self.data_df = self.convertDict2Df_()
-        self.column_selection = ["total_images", "big_images", "middle_images", "small_images", "background_images",
+        self.column_selection = ["total_images", "big_images", "middle_images", "small_images", "very_small_images", "background_images",
                                                 "total_length", "external_links", "internal_links", "total_links",
                                                 "RA_big_images/total_images", "RA_middle_images/total_images",
                                                 "RA_small_images/total_images", "RA_total_images/total_length",
-                                                "RA_internal_links/external_links"]
+                                                "RA_internal_links/external_links", "RA_very_small_images/total_images"]
 
     # private methods
 
@@ -35,6 +35,7 @@ class Analyzer():
         df["RA_big_images/total_images"] = df["big_images"] / df["total_images"]
         df["RA_middle_images/total_images"] = df["middle_images"] / df["total_images"]
         df["RA_small_images/total_images"] = df["small_images"] / df["total_images"]
+        df["RA_very_small_images/total_images"] = df["very_small_images"] / df["total_images"]
         df["RA_total_images/total_length"] = df["total_images"] / df["total_length"]
         df["RA_internal_links/external_links"] = df["internal_links"] / df["external_links"]
         return df
@@ -120,7 +121,7 @@ class Analyzer():
         browser = webdriver.Edge("webdriver/msedgedriver.exe")
         with open("websites.txt", "r", encoding="utf-8") as f:
             orig_websites = f.readlines()
-        for idx, row in clustered_df.iterrows():
+        for _, row in clustered_df.iterrows():
             print(row.name)
             row_cluster = int(row["clusters"])
             print(row_cluster)
