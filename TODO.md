@@ -14,4 +14,3 @@
 
 - add domain to data_dict
 - feature weights for KMeans?
-- remove small images (that are mostly icons anyway)

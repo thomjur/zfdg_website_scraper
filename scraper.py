@@ -308,7 +308,7 @@ class DataPreparation:
                     for _, size_dict in curr_site_img_dict["images"].items():
                         if (size_dict["height"] > 700) or (size_dict["width"] > 700):
                             curr_site_img_dict["big_images"] += 1
-                        elif (size_dict["height"] > 400) or (size_dict["width"] > 400):
+                        elif (size_dict["height"] > 348) or (size_dict["width"] > 348):
                             curr_site_img_dict["middle_images"] += 1
                         elif (size_dict["height"] > 35) or (size_dict["width"] > 35):
                             curr_site_img_dict["small_images"] += 1
