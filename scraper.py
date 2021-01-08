@@ -105,14 +105,17 @@ class Scraper:
         '''
         self.browser.get(self.websiteOriginal)
         # trying to accept data policy consents
-        try:
-            self.browser.implicitly_wait(3)
-            self.browser.find_element_by_xpath(
-                "//input[@type='submit' and (@value='OK' or @value='Ich stimme zu')]").click()
-        except:
-            print("Couldn't find consent submission on this page!")
-
+        self.browser.maximize_window()
         self.browser.implicitly_wait(2)
+        input("Please accept potential access restrictions and press any key to continue...")
+        # scroll down as far as possible
+        try:
+            for _ in range(6):
+                self.browser.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+                time.sleep(2)
+        except:
+            input("Exception occurred. Try to scroll down manually and press an key to continue...")
+            time.sleep(2)
         page = self.browser.page_source
         self.browser.close()
         return page
@@ -191,6 +194,15 @@ class DataPreparation:
         browser.get(url)
         browser.maximize_window()
         browser.implicitly_wait(5)
+        input("Please accept potential access restrictions and press any key to continue...")
+        # scroll down as far as possible
+        try:
+            for _ in range(6):
+                browser.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+                time.sleep(2)
+        except:
+            input("Exception occurred. Try to scroll down manually and press an key to continue...")
+            time.sleep(2)
         image_dict = dict()
         image_list = browser.find_elements_by_tag_name("img")
         for image in image_list:

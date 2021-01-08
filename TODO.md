@@ -14,3 +14,4 @@
 
 - add domain to data_dict
 - feature weights for KMeans?
+- text nachschauen
