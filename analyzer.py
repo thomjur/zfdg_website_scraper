@@ -19,7 +19,7 @@ class Analyzer():
         self.data_dict = self.openDataDict_()
         self.data_df = self.convertDict2Df_()
         self.column_selection = ["total_images", "big_images", "middle_images", "small_images", "very_small_images", "background_images",
-                                                "total_length", "external_links", "internal_links", "total_links",
+                                                "total_length", "headings", "external_links", "internal_links", "total_links",
                                                 "RA_big_images/total_images", "RA_middle_images/total_images",
                                                 "RA_small_images/total_images", "RA_total_images/total_length", "RA_big_and_middle_images/total_length",
                                                 "RA_internal_links/external_links", "RA_very_small_images/total_images"]
@@ -79,36 +79,6 @@ class Analyzer():
 
     # public methods
 
-    def getBuiltWithCategorical(self):
-        '''
-        creates a dataframe with one hot encoding of information stored in builtwith.pickle; this can be used with cluserData()
-        '''
-        try:
-            with open("builtwith.pickle", "rb") as f:
-                bw_dict = pickle.load(f)
-        except:
-            print("Please create builtwith.pickle with DataPreparation class first! Closing...")
-            sys.exit()
-            
-        df = pd.DataFrame.from_dict(bw_dict, orient="index")
-        new_frame = pd.DataFrame(index=df.index)
-        # I have completely forgotten what's going on here... but it work :D
-        for num, column in enumerate(df.columns):
-            zero_ = f"zero_{num}"
-            col_ = df[column].fillna(zero_)
-            col_ = col_.apply(lambda x: [x] if x == zero_ else x)
-            mlb = MultiLabelBinarizer()
-            nuu = mlb.fit_transform(col_)
-            nuuu = pd.DataFrame(nuu, columns=mlb.classes_, index=df.index).drop(columns=[zero_])
-            new_frame = pd.concat([new_frame, nuuu], axis=1)
-        return new_frame
-
-    def getCosine4CategoricalData(self, df):
-        '''
-        getting cosine similarity for df with one hot encoded categorical features
-        '''
-        cosine_data = cosine_similarity(df)
-        return pd.DataFrame(cosine_data, columns=df.index, index=df.index)
 
     def getScreenshotsFromClusters(self, clustered_df):
         '''
@@ -143,6 +113,12 @@ class Analyzer():
         returns the currently set columns for KMeans standardization and clustering process; can be reset with setColumnSelection(); DEFAULT is all columns
         '''
         print(f"Currently, the following columns are selected: {self.column_selection}")
+
+    def getDataFrame(self):
+        '''
+        returns the dataframe self.data_df based on current column selection
+        '''
+        return self.data_df[self.column_selection]   
 
     def clusterDataKMeans(self, df_scaled, n=3):
         '''

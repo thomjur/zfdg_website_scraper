@@ -144,7 +144,6 @@ class DataPreparation:
         ** number of images
         ** image sizes
         ** text length
-        ** builtwith (TODO)
     '''
 
     def __init__(self):
@@ -226,50 +225,7 @@ class DataPreparation:
         with open("merged_data_dict.pickle", "wb") as f:
             pickle.dump(image_dict, f)
         return image_dict
-        
-    def getBuiltWith(self):
-        '''
-        getting built information from CorpusData with builtwith
-        '''
-        directory = self.directory
-        builtwith_dict = dict()
-        # the original websites are needed to get image information from original website
-        with open("websites_bw.txt", "r") as f:
-            websiteList = f.readlines()
-            original_websites = [website.split(",")[0] for website in websiteList if website != ""]
-        for entry in os.scandir(directory):
-            if entry.path.endswith(".html"):
-                # getting url of current site + cleaning
-                _, netloc_ = os.path.split(entry.path)
-                netloc_ = netloc_.replace(
-                    ".html", "").replace("www.", "").strip()
-                orig_website = ""
-                for website in original_websites:
-                    if netloc_ in website:
-                        orig_website = website
-                try:
-                    if orig_website[-1] == "/":
-                        orig_website = orig_website[:-1]
-                    print(orig_website)
-                    bw_dict = builtwith(orig_website)
-                    builtwith_dict[netloc_] = bw_dict
-                except Exception as e:
-                    print(e)
-        with open("builtwith.pickle", "wb") as f:
-            pickle.dump(builtwith_dict, f)
-        return builtwith_dict
 
-    def getBuiltWithFromPickle(self):
-        '''
-        opening and returning dict from pickle file (if it exists)
-        '''
-        try:
-            with open("builtwith.pickle", "rb") as f:
-                dd_ = pickle.load(f)
-            return dd_
-        except:
-            print("Pickle file does not seem to exist. Run DataPreparation.getBuiltWith() first to create dict.pickle")
-            return -1
 
     def getImages(self):
         '''
@@ -380,11 +336,10 @@ class DataPreparation:
         directory = self.directory
         text_dict_global = dict()
         for entry in os.scandir(directory):
-            print(entry)
             if entry.path.endswith(".html"):
                 _, netloc_ = os.path.split(entry.path)
                 netloc_ = netloc_.replace(".html", "").replace("www.", "").strip()
-                curr_site_text_dict = {"total_length": 0, "text_complete": ""}
+                curr_site_text_dict = {"total_length": 0, "text_complete": "", "headings": 0}
                 #print(f"Current netloc {netloc_} of type {type(netloc_)}")
                 with open(entry.path, "r", encoding="utf-8") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
@@ -392,7 +347,9 @@ class DataPreparation:
                     text = soup.get_text()
                     text = re.sub(r"\n|\t", " ", text)
                     text = re.sub(r"\s{2,}", " ", text)
+                    headings = len(soup.find_all(re.compile(r"h\d")))
                     curr_site_text_dict["total_length"] = len(text)
                     curr_site_text_dict["text_complete"] = text
+                    curr_site_text_dict["headings"] = headings
                     text_dict_global[netloc_] = curr_site_text_dict
         return text_dict_global
