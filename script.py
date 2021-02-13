@@ -1,4 +1,6 @@
-from scraper import Scraper, Corpus, DataPreparation
+from scraper import Scraper, Corpus
+from data_preparation import DataPreparation
+from analyzer import Analyzer
 import pandas as pd
 
 '''

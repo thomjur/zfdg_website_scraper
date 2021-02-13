@@ -19,10 +19,11 @@ class Analyzer():
         self.data_dict = self.openDataDict_()
         self.data_df = self.convertDict2Df_()
         self.column_selection = ["total_images", "big_images", "middle_images", "small_images", "very_small_images", "background_images",
-                                                "total_length", "headings", "external_links", "internal_links", "total_links",
+                                                "total_length", "headings", "external_links", "internal_links", "total_links", "total_videos", "small_videos", "big_videos",
                                                 "RA_big_images/total_images", "RA_middle_images/total_images",
                                                 "RA_small_images/total_images", "RA_total_images/total_length", "RA_big_and_middle_images/total_length",
-                                                "RA_internal_links/external_links", "RA_very_small_images/total_images"]
+                                                "RA_internal_links/external_links", "RA_very_small_images/total_images", "RA_headings/total_length",
+                                                ]
 
     # private methods
 
@@ -39,6 +40,7 @@ class Analyzer():
         df["RA_total_images/total_length"] = df["total_images"] / df["total_length"]
         df["RA_big_and_middle_images/total_length"] = (df["big_images"] + df["middle_images"]) / df["total_length"]
         df["RA_internal_links/external_links"] = df["internal_links"] / df["external_links"]
+        df["RA_headings/total_length"] = df["headings"] / df["total_length"]
         return df
 
     def getWebsiteCategories_(self, df):
@@ -120,6 +122,12 @@ class Analyzer():
         '''
         return self.data_df[self.column_selection]   
 
+    def getFullDataFrame(self):
+        '''
+        returns full dataframge with all columns
+        '''
+        return self.data_df
+        
     def clusterDataKMeans(self, df_scaled, n=3):
         '''
         clustering data with 3 KMeans
