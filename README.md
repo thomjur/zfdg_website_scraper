@@ -13,5 +13,6 @@ Dieser Ordner enthält die Ergebnisse der im Artikel besprochenen Analyse. Darun
 1. Die Datei `data_abs_values.csv` mit den absoluten Werten der Features des Webseiten-Samples. Diese Datei dient zum Nachvollzug des Clusterings (vgl. Kapitel 4 des Artikels).
 2. Die Screenshots des Text-, Video- und Bild-Feature Clustering aus Kapitel 4.2. d) (im Ordner `Screenshots`).
 3. Die während Corpus-Initialisierung heruntergeladenen Daten (vgl. Kapitel 4.1.). Diese Daten befinden sich im Ordner `CorpusData`.
+4. Die Dateien `image_data.pickle` und `merged_data_dict.pickle`, welche die Resultate des `DataPreparation()` Schritts enthalten (Kapitel 3.2. und 4.1.).
 
  
