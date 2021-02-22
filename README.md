@@ -21,7 +21,7 @@ Dieser Ordner enthält die aktuellste im Kontext des Artikels genutzte Version d
 
 Der Ordner enthält die folgenden Dateien:
 
-1. Alle im Kontext des Programms genutzten Klassen in den Files `scraper.py` (für die Corpus-Initialisierung, vgl. Kapitel 3.1.), `data_preparation.py` (Datengenerierung, vgl. Kapitel 3.2.) und `analyzer.py` (für die Analyse, vgl. Kapitel 3.3.).
+1. Alle im Kontext des Programms genutzten Klassen `scraper.py` (für die Corpus-Initialisierung, vgl. Kapitel 3.1.), `data_preparation.py` (Datengenerierung, vgl. Kapitel 3.2.) und `analyzer.py` (für die Analyse, vgl. Kapitel 3.3.).
 2. Ein Jupyter Notebook (`Main_Program_Notebook.ipynb`), das die interaktive Ausführung des Programms inklusive Auswertung der Daten erlaubt.
 3. Einen Ordner mit dem in diesem Programm genutzten Edge-Webdriver.
 4. Die `requirements.txt` mit den Abhängigkeiten der in diesem Programm genutzten Bibliotheken und Frameworks.
