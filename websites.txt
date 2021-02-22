@@ -1,6 +1,0 @@
-https://marginalie.hypotheses.org/,uni,news
-https://www.faz.net/,jou,news
-https://www.adidas.com/,eco,image
-https://www.volkswagen.de/,eco,image
-https://www.gamestar.de/,ent,news
-https://www.fdp.de/,pol,image
