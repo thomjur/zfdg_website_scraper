@@ -2,7 +2,7 @@
 **v1.0 (22.02.2021)**
 **by Thomas Jurczyk**
 
-Dieses Repository enthält die Dokumentation der Analyseergebnisse aus dem Artikel "Vorstellung eines (teil-)automatisierten Verfahrens zur Analyse der Multimodalität von Webseiten" und das im Kontext des Artikels genutzte Programm. Das Programm dient im derzeitigen Zustand nur zur Dokumentation und Nachvollzug der Analyse. Es ist nicht darauf ausgelegt, von anderen Personen, insbesondere solchen, die über keine Programmierkenntnisse verfügen, genutzt zu werden.
+Dieses Repository enthält die Dokumentation der Analyseergebnisse aus dem Artikel "Vorstellung eines (teil-)automatisierten Verfahrens zur Analyse der Multimodalität von Webseiten" (eingereicht bei [Zeitschrift für digitale Geisteswissenschaften](https://zfdg.de/)) und das im Kontext des Artikels genutzte Programm. Das Programm dient im derzeitigen Zustand nur zur Dokumentation und Nachvollzug der Analyse. Es ist nicht darauf ausgelegt, von anderen Personen, insbesondere solchen, die über keine Programmierkenntnisse verfügen, genutzt zu werden.
 
 ## Inhalt des Repository
 
