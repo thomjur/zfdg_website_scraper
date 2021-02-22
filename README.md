@@ -17,7 +17,7 @@ Dieser Ordner enthält die Ergebnisse der im Artikel besprochenen Analyse. Darun
 
 ### Ordner: `Programm`
 
-Dieser Ordner enthält die während die aktuellste im Kontext des Artikels genutzte Version des Programm zu Corpus-Initialisierung und -Analyse. Erneut ist darauf hinzuweisen, dass dieses Programm nicht für eine allgemeine Nutzung gedacht ist.
+Dieser Ordner enthält die aktuellste im Kontext des Artikels genutzte Version des Programms zu Corpus-Initialisierung und -Analyse. Erneut ist darauf hinzuweisen, dass dieses Programm nicht für eine allgemeine Nutzung gedacht ist.
 
 Der Ordner enthält die folgenden Dateien:
 
